@@ -1,3 +1,5 @@
+<img width="1366" height="780" alt="image" src="https://github.com/user-attachments/assets/dafb8d26-7d70-46bc-9ed5-ac9204d113f1" />
+
 @startuml
 ' Título do Diagrama
 title Diagrama de Classes - Simulador de Hidrômetro Analógico (SHA 2.0)
@@ -150,4 +152,4 @@ EstadoComAr ..> EstadoComAgua : instancia para transição [cite: 45]
 
 ' Nota sobre classes omitidas para clareza
 note "A classe org.example.Main foi omitida por ser código boilerplate gerado pela IDE e não fazer parte da arquitetura do simulador. [cite: 93]\nAs classes da biblioteca JavaFX (Stage, Text, etc.) e Javalin são representadas como tipos, mas não detalhadas no diagrama." as N1
-@enduml# Diagrama-do-simulador
+@enduml
