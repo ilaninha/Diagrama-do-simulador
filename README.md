@@ -10,7 +10,7 @@ O diagrama abaixo ilustra a estrutura estática do sistema. Ele mostra as classe
 
 **<img width="1367" height="759" alt="image" src="https://github.com/user-attachments/assets/4f55b946-a50e-4498-9be9-1b152b44cd04" />
 **
-![Diagrama de Classes UML do SHA-2.0](URL_DA_SUA_IMAGEM_AQUI.png)
+![Diagrama de Classes UML do SHA-2.0]
 
 <details>
 <summary>Clique para ver o código PlantUML que gerou este diagrama</summary>
@@ -279,3 +279,43 @@ EstadoComAr ..> EstadoComAgua : instancia para transição [cite: 45]
 ' Nota sobre classes omitidas para clareza
 note "A classe org.example.Main foi omitida por ser código boilerplate gerado pela IDE e não fazer parte da arquitetura do simulador. [cite: 93]\nAs classes da biblioteca JavaFX (Stage, Text, etc.) e Javalin são representadas como tipos, mas não detalhadas no diagrama." as N1
 @enduml
+
+## 🧩 Análise dos Componentes por Pacote
+
+A estrutura do projeto é dividida em pacotes que separam as responsabilidades, seguindo uma abordagem similar ao padrão MVC (Model-View-Controller).
+
+### `com.meu_pacote.model` (O Coração do Sistema)
+Este pacote contém a lógica de negócio principal.
+* **`Hidrometro`**: É a classe central do sistema. [cite_start]Ela atua como **`<<Subject>>`** no padrão Observer e **`<<Context>>`** no padrão State[cite: 114, 115]. Suas principais responsabilidades são:
+    * [cite_start]Manter o estado atual da simulação (`consumoTotalM3`, `pressaoAtualKpa`)[cite: 17, 18].
+    * [cite_start]Gerenciar uma lista de observadores (`Display`) e notificá-los sobre mudanças[cite: 17, 23].
+    * [cite_start]Delegar o comportamento de medição de fluxo para o objeto de estado atual (`estadoAtual.medirFluxo()`)[cite: 27].
+* **`DadosHidrometro`**: É um **D**ata **T**ransfer **O**bject (`<<DTO>>`). [cite_start]Sua função é encapsular os dados do hidrômetro em um objeto imutável para ser enviado às camadas de visão e API[cite: 11]. Isso garante que a UI não possa modificar o estado do modelo diretamente.
+
+### `com.meu_pacote.state` (Padrão de Projeto State)
+[cite_start]Este pacote implementa o padrão State para gerenciar os diferentes comportamentos do hidrômetro[cite: 113, 114].
+* [cite_start]**`EstadoHidrometro`**: É a interface (`<<Interface>>`) que define o contrato que todos os estados concretos devem seguir, declarando o método `medirFluxo()`[cite: 47].
+* **`EstadoComAgua`**, **`EstadoSemAgua`**, **`EstadoComAr`**: São as implementações concretas do estado. [cite_start]Cada uma encapsula a lógica específica para uma condição de operação do hidrômetro (fluxo normal, sem água ou com ar)[cite: 34, 38, 48, 110, 111, 112]. [cite_start]Elas mantêm uma referência ao `Hidrometro` para acessar seus dados e para realizar a transição para um novo estado[cite: 34, 45, 52].
+
+### `com.meu_pacote.ui` (A Camada de Visualização)
+Responsável pela interface gráfica do usuário (GUI).
+* [cite_start]**`Display`**: Atua como um **`<<Observer>>`** no padrão Observer[cite: 115]. Ela é responsável por renderizar o estado do hidrômetro. [cite_start]Seu método `update(DadosHidrometro)` é invocado pelo `Hidrometro` sempre que os dados mudam, garantindo que a UI esteja sempre sincronizada com o modelo[cite: 77, 115].
+
+### `com.meu_pacote.api` (A Camada de Controle/API)
+Expõe os dados do simulador para sistemas externos.
+* [cite_start]**`ControladorAPI`**: Utiliza o framework **Javalin** para criar um servidor web e expor os dados do `Hidrometro` através de endpoints REST[cite: 3, 6, 112]. [cite_start]Ele possui uma referência ao `Hidrometro` para consultar os dados atuais quando uma requisição é recebida[cite: 3, 6].
+
+### `com.meu_pacote` (Ponto de Entrada da Aplicação)
+* [cite_start]**`MainApp`**: É a classe principal que inicia a aplicação[cite: 82]. [cite_start]Ela é responsável por criar as instâncias de todos os objetos principais (`Hidrometro`, `Display`, `ControladorAPI`) e conectá-los, configurando os padrões Observer e State[cite: 84, 85]. [cite_start]Ela também gerencia o loop de simulação que avança o tempo e atualiza o sistema periodicamente[cite: 86].
+
+## 🔗 Relacionamentos e Notações Chave
+
+* **Composição (`*--`)**: Usada para indicar que um objeto "possui" outro e gerencia seu ciclo de vida. Ex: `MainApp` é composto por um `Hidrometro`. Se a `MainApp` for encerrada, o `Hidrometro` também é.
+* **Agregação (`*--`)**: Representa uma relação "tem-um" forte. Ex: `Hidrometro` tem uma lista de `Display`s. A notação é similar à composição em PlantUML, mas o contexto de ser uma coleção de observadores define a natureza do relacionamento.
+* **Associação (`--`)**: Uma relação estrutural entre classes. Ex: `EstadoComAgua` tem uma associação com `Hidrometro` para poder interagir com o contexto.
+* **Realização/Implementação (`<|..`)**: Indica que uma classe implementa uma interface. Ex: `EstadoComAgua` implementa `EstadoHidrometro`.
+* **Dependência (`..>`)**: Indica que uma classe "usa" outra. É um relacionamento mais fraco. Ex: `Display` depende de `DadosHidrometro`, pois o recebe como parâmetro no método `update`.
+* **Estereótipos (`<<...>>`)**: Rótulos usados para dar um significado semântico adicional a um elemento do diagrama, como `<<Subject>>`, `<<Observer>>`, `<<DTO>>`, para clarificar o papel da classe em um padrão de projeto.
+
+---
+Este documento reflete a arquitetura da versão 2.0 do SHA, destacando um design robusto e baseado em padrões que favorece a manutenibilidade e a expansão futura.
